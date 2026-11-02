@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bilgi Yarışması</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg1: #6a5af9;
+    --bg2: #d66efd;
+    --bg3: #3fc4ff;
+    --card: rgba(255, 255, 255, 0.95);
+    --text: #2b2350;
+    --muted: #7a7398;
+    --accent: #6a5af9;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --gold: #f8b400;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Nunito", system-ui, sans-serif;
+    color: var(--text);
+    background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+    background-size: 300% 300%;
+    animation: bgMove 16s ease infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    min-height: 100vh;
+  }
+  @keyframes bgMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .card {
+    width: 100%;
+    max-width: 620px;
+    background: var(--card);
+    border-radius: 28px;
+    padding: 32px 28px;
+    box-shadow: 0 24px 60px rgba(40, 20, 100, 0.3);
+    animation: pop 0.4s ease;
+  }
+  @keyframes pop {
+    from { transform: scale(0.94) translateY(10px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+  .hidden { display: none !important; }
+  h1 {
+    font-size: clamp(28px, 6vw, 40px);
+    font-weight: 900;
+    text-align: center;
+    background: linear-gradient(90deg, var(--bg1), var(--bg2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 6px;
+  }
+  .subtitle { text-align: center; color: var(--muted); margin-bottom: 26px; }
+  label { font-weight: 800; display: block; margin-bottom: 8px; }
+  input[type=text] {
+    width: 100%;
+    font: inherit;
+    font-size: 18px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 2px solid #e2ddf7;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 22px;
+  }
+  input[type=text]:focus { border-color: var(--accent); }
+  .levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 26px; }
+  .level {
+    font: inherit;
+    font-weight: 800;
+    padding: 14px 8px;
+    border-radius: 14px;
+    border: 2px solid #e2ddf7;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text);
+  }
+  .level small { display: block; font-weight: 600; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .level:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .level.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .level.selected small { color: #e6e2ff; }
+  .btn {
+    font: inherit;
+    font-weight: 900;
+    font-size: 18px;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    color: #fff;
+    background: linear-gradient(90deg, var(--bg1), var(--bg2));
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(106, 90, 249, 0.35);
+    transition: transform 0.15s, opacity 0.2s;
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+  .btn.secondary { background: #efecff; color: var(--accent); box-shadow: none; }
+  .records { margin-top: 22px; display: flex; justify-content: space-between; gap: 8px; font-size: 14px; color: var(--muted); }
+  .records div { flex: 1; text-align: center; background: #f6f4ff; border-radius: 12px; padding: 8px 4px; }
+  .records b { display: block; color: var(--text); font-size: 18px; }
+
+  /* Oyun ekranı */
+  .greet { font-weight: 800; color: var(--muted); margin-bottom: 14px; text-align: center; }
+  .greet span { color: var(--accent); }
+  .hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 800; }
+  .pill { background: #f1eeff; border-radius: 999px; padding: 6px 14px; }
+  .score { color: var(--accent); }
+  .lives { letter-spacing: 2px; font-size: 18px; }
+  .timer { height: 12px; background: #eee9ff; border-radius: 999px; overflow: hidden; margin-bottom: 6px; }
+  .timer-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--good), #a3e635); border-radius: 999px; }
+  .timer-fill.warn { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .timer-fill.danger { background: linear-gradient(90deg, var(--bad), #f97316); }
+  .time-text { text-align: right; font-size: 13px; color: var(--muted); font-weight: 700; margin-bottom: 18px; }
+  .category { display: inline-block; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #fff; background: var(--bg2); border-radius: 8px; padding: 4px 10px; margin-bottom: 10px; }
+  .question { font-size: clamp(19px, 4.5vw, 24px); font-weight: 800; margin-bottom: 22px; line-height: 1.35; }
+  .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .answer {
+    font: inherit;
+    font-weight: 700;
+    font-size: 16px;
+    text-align: left;
+    padding: 16px;
+    border-radius: 16px;
+    border: 2px solid #e2ddf7;
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-height: 64px;
+  }
+  .answer .letter {
+    flex: none;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    background: #efecff; color: var(--accent);
+    font-weight: 900;
+  }
+  .answer:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(106, 90, 249, 0.18); }
+  .answer:disabled { cursor: default; }
+  .answer.correct { background: var(--good); border-color: var(--good); color: #fff; animation: bounce 0.4s; }
+  .answer.correct .letter { background: #fff; color: var(--good); }
+  .answer.wrong { background: var(--bad); border-color: var(--bad); color: #fff; animation: shake 0.4s; }
+  .answer.wrong .letter { background: #fff; color: var(--bad); }
+  @keyframes bounce { 50% { transform: scale(1.05); } }
+  @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .feedback { text-align: center; font-weight: 800; margin-top: 18px; min-height: 24px; }
+  .feedback.good { color: var(--good); }
+  .feedback.bad { color: var(--bad); }
+
+  /* Sonuç ekranı */
+  .big-score { text-align: center; font-size: 64px; font-weight: 900; color: var(--accent); line-height: 1; margin: 10px 0 6px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 22px 0; }
+  .stat { background: #f6f4ff; border-radius: 14px; padding: 12px 6px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 700; }
+  .stat b { display: block; color: var(--text); font-size: 22px; }
+  .new-record { text-align: center; font-weight: 900; color: var(--gold); margin-bottom: 14px; }
+  .btn-row { display: grid; gap: 10px; }
+
+  /* Şampiyon popup */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(25, 10, 60, 0.6);
+    backdrop-filter: blur(4px);
+    display: grid; place-items: center;
+    padding: 16px;
+    z-index: 10;
+    animation: fade 0.3s ease;
+  }
+  @keyframes fade { from { opacity: 0; } }
+  .champion {
+    background: linear-gradient(135deg, #fff7d6, #ffe08a);
+    border: 4px solid var(--gold);
+    border-radius: 28px;
+    padding: 34px 40px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(248, 180, 0, 0.6);
+    animation: champ 0.6s cubic-bezier(.2,1.6,.4,1);
+    max-width: 380px;
+    width: 100%;
+  }
+  @keyframes champ { from { transform: scale(0.3) rotate(-10deg); opacity: 0; } }
+  .champion .trophy { font-size: 72px; animation: float 1.6s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-8px); } }
+  .champion h2 { font-size: 38px; font-weight: 900; color: #b45309; letter-spacing: 2px; margin: 8px 0 18px; }
+  .champion .btn { background: linear-gradient(90deg, #f59e0b, #f8b400); box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4); }
+  .confetti { position: fixed; top: -12px; width: 10px; height: 14px; z-index: 11; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+
+  @media (max-width: 480px) {
+    .card { padding: 24px 18px; border-radius: 22px; }
+    .answers { grid-template-columns: 1fr; }
+    .big-score { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Giriş ekranı -->
+<section id="startScreen" class="card">
+  <h1>Bilgi Yarışması</h1>
+  <p class="subtitle">Genel kültürünü test et, rekoru kır!</p>
+
+  <label for="nameInput">Adın</label>
+  <input id="nameInput" type="text" maxlength="20" placeholder="Adını yaz..." autocomplete="off">
+
+  <label>Zorluk</label>
+  <div class="levels">
+    <button class="level selected" data-level="kolay">Kolay<small>20 sn</small></button>
+    <button class="level" data-level="orta">Orta<small>15 sn</small></button>
+    <button class="level" data-level="zor">Zor<small>10 sn</small></button>
+  </div>
+
+  <button id="startBtn" class="btn" disabled>Başla</button>
+
+  <div class="records">
+    <div>Kolay rekor<b id="recKolay">0</b></div>
+    <div>Orta rekor<b id="recOrta">0</b></div>
+    <div>Zor rekor<b id="recZor">0</b></div>
+  </div>
+</section>
+
+<!-- Oyun ekranı -->
+<section id="gameScreen" class="card hidden">
+  <p class="greet">Haydi <span id="greetName"></span>, devam!</p>
+  <div class="hud">
+    <span class="pill">Soru <span id="qNum">1</span></span>
+    <span class="pill lives" id="lives"></span>
+    <span class="pill score">Skor: <span id="score">0</span></span>
+  </div>
+  <div class="timer"><div id="timerFill" class="timer-fill"></div></div>
+  <div class="time-text"><span id="timeLeft">20</span> sn</div>
+  <span id="category" class="category"></span>
+  <p id="question" class="question"></p>
+  <div id="answers" class="answers"></div>
+  <p id="feedback" class="feedback"></p>
+</section>
+
+<!-- Sonuç ekranı -->
+<section id="endScreen" class="card hidden">
+  <h1>Oyun Bitti</h1>
+  <p class="subtitle">Tebrikler <b id="endName"></b>!</p>
+  <div class="big-score" id="finalScore">0</div>
+  <p class="subtitle" style="margin-bottom:0">puan</p>
+  <p id="newRecord" class="new-record hidden">🎉 Yeni rekor!</p>
+  <div class="stats">
+    <div class="stat">Doğru<b id="statCorrect">0</b></div>
+    <div class="stat">Soru<b id="statTotal">0</b></div>
+    <div class="stat">Rekor<b id="statBest">0</b></div>
+  </div>
+  <div class="btn-row">
+    <button id="againBtn" class="btn">Tekrar Oyna</button>
+    <button id="menuBtn" class="btn secondary">Ana Menü</button>
+  </div>
+</section>
+
+<!-- Şampiyon popup -->
+<div id="championPopup" class="overlay hidden">
+  <div class="champion">
+    <div class="trophy">🏆</div>
+    <h2>ŞAMPİYON</h2>
+    <button id="championBtn" class="btn">Harika!</button>
+  </div>
+</div>
+
+<script>
+// ---------- Soru bankası ----------
+// İlk şık her zaman doğru cevaptır; ekranda şıklar karıştırılır.
+const QUESTIONS = {
+  kolay: [
+    ["Coğrafya", "Türkiye'nin başkenti neresidir?", ["Ankara", "İstanbul", "İzmir", "Bursa"]],
+    ["Genel", "Bir yılda kaç ay vardır?", ["12", "10", "11", "13"]],
+    ["Bilim", "Suyun kimyasal formülü nedir?", ["H₂O", "CO₂", "O₂", "NaCl"]],
+    ["Tarih", "Türkiye Cumhuriyeti'nin kurucusu kimdir?", ["Mustafa Kemal Atatürk", "İsmet İnönü", "Celal Bayar", "Fevzi Çakmak"]],
+    ["Spor", "Futbolda bir takım sahada kaç oyuncuyla oynar?", ["11", "9", "10", "12"]],
+    ["Coğrafya", "Dünyanın en büyük okyanusu hangisidir?", ["Pasifik Okyanusu", "Atlas Okyanusu", "Hint Okyanusu", "Arktik Okyanusu"]],
+    ["Genel", "Bir haftada kaç gün vardır?", ["7", "5", "6", "8"]],
+    ["Coğrafya", "Karadeniz ile Marmara Denizi'ni bağlayan boğaz hangisidir?", ["İstanbul Boğazı", "Çanakkale Boğazı", "Cebelitarık Boğazı", "Hürmüz Boğazı"]],
+    ["Doğa", "\"Çölün gemisi\" olarak bilinen hayvan hangisidir?", ["Deve", "At", "Fil", "Zürafa"]],
+    ["Coğrafya", "Eyfel Kulesi hangi şehirdedir?", ["Paris", "Londra", "Roma", "Berlin"]],
+    ["Sanat", "Kırmızı ve sarı karıştırılınca hangi renk elde edilir?", ["Turuncu", "Yeşil", "Mor", "Kahverengi"]],
+    ["Bilim", "Dünya'nın doğal uydusu hangisidir?", ["Ay", "Mars", "Venüs", "Titan"]],
+    ["Genel", "Bir saatte kaç dakika vardır?", ["60", "100", "30", "45"]],
+    ["Bilim", "\"Kızıl Gezegen\" olarak bilinen gezegen hangisidir?", ["Mars", "Jüpiter", "Venüs", "Satürn"]],
+    ["Tarih", "Türkiye'nin ulusal marşının adı nedir?", ["İstiklal Marşı", "Onuncu Yıl Marşı", "Gençlik Marşı", "Harbiye Marşı"]],
+    ["Spor", "Basketbolda bir takım sahada kaç oyuncuyla oynar?", ["5", "6", "7", "4"]],
+    ["Doğa", "Arılar hangi besini üretir?", ["Bal", "Süt", "Peynir", "Pekmez"]],
+    ["Coğrafya", "Plaka kodu 06 olan il hangisidir?", ["Ankara", "İzmir", "Adana", "Antalya"]],
+    ["Matematik", "Bir üçgenin kaç kenarı vardır?", ["3", "4", "5", "6"]],
+    ["Tarih", "23 Nisan hangi bayram olarak kutlanır?", ["Ulusal Egemenlik ve Çocuk Bayramı", "Cumhuriyet Bayramı", "Zafer Bayramı", "Gençlik ve Spor Bayramı"]],
+    ["Tarih", "Cumhuriyet hangi tarihte ilan edilmiştir?", ["29 Ekim 1923", "23 Nisan 1920", "30 Ağustos 1922", "19 Mayıs 1919"]],
+    ["Genel", "Aşağıdakilerden hangisi bir meyvedir?", ["Elma", "Havuç", "Patates", "Ispanak"]],
+    ["Sanat", "Mona Lisa tablosunun ressamı kimdir?", ["Leonardo da Vinci", "Pablo Picasso", "Vincent van Gogh", "Michelangelo"]],
+    ["Doğa", "Dünyanın en hızlı kara hayvanı hangisidir?", ["Çita", "Aslan", "At", "Ceylan"]],
+    ["Coğrafya", "Türkiye'nin en kalabalık şehri hangisidir?", ["İstanbul", "Ankara", "İzmir", "Konya"]],
+    ["Bilim", "Güneş sisteminin merkezinde ne bulunur?", ["Güneş", "Dünya", "Ay", "Jüpiter"]],
+    ["Matematik", "7 × 8 kaçtır?", ["56", "54", "48", "64"]],
+    ["Doğa", "Penguenler doğal olarak en çok hangi kıtada yaşar?", ["Antarktika", "Afrika", "Avrupa", "Asya"]],
+    ["Genel", "Gökkuşağında geleneksel olarak kaç renk sayılır?", ["7", "5", "6", "8"]],
+    ["Spor", "Tenis maçında topa vurmak için ne kullanılır?", ["Raket", "Sopa", "Eldiven", "Kürek"]]
+  ],
+  orta: [
+    ["Coğrafya", "Türkiye'nin en yüksek dağı hangisidir?", ["Ağrı Dağı", "Erciyes Dağı", "Uludağ", "Süphan Dağı"]],
+    ["Coğrafya", "Tamamı Türkiye sınırları içinde olan en uzun nehir hangisidir?", ["Kızılırmak", "Sakarya", "Yeşilırmak", "Büyük Menderes"]],
+    ["Bilim", "İnsan vücudundaki en büyük organ hangisidir?", ["Deri", "Karaciğer", "Akciğer", "Beyin"]],
+    ["Bilim", "Periyodik tabloda \"Fe\" simgesi hangi elementi gösterir?", ["Demir", "Flor", "Fosfor", "Fermiyum"]],
+    ["Bilim", "Işığın boşluktaki hızı yaklaşık kaçtır?", ["300.000 km/s", "30.000 km/s", "3.000 km/s", "3.000.000 km/s"]],
+    ["Edebiyat", "\"Suç ve Ceza\" romanının yazarı kimdir?", ["Fyodor Dostoyevski", "Lev Tolstoy", "Anton Çehov", "Nikolay Gogol"]],
+    ["Tarih", "İstanbul hangi yılda fethedilmiştir?", ["1453", "1071", "1299", "1517"]],
+    ["Tarih", "Malazgirt Meydan Muharebesi hangi yılda yapılmıştır?", ["1071", "1453", "1176", "1243"]],
+    ["Coğrafya", "Avustralya'nın başkenti neresidir?", ["Kanberra", "Sidney", "Melbourne", "Perth"]],
+    ["Coğrafya", "Kanada'nın başkenti neresidir?", ["Ottawa", "Toronto", "Vancouver", "Montreal"]],
+    ["Matematik", "En küçük asal sayı hangisidir?", ["2", "1", "3", "0"]],
+    ["Spor", "Türkiye Milli Futbol Takımı 2002 Dünya Kupası'nı kaçıncı sırada bitirdi?", ["Üçüncü", "İkinci", "Dördüncü", "Çeyrek finalist"]],
+    ["Bilim", "Bitkiler fotosentez sırasında havadan hangi gazı alır?", ["Karbondioksit", "Oksijen", "Azot", "Hidrojen"]],
+    ["Edebiyat", "\"Çalıkuşu\" romanının yazarı kimdir?", ["Reşat Nuri Güntekin", "Halide Edib Adıvar", "Yakup Kadri Karaosmanoğlu", "Sait Faik Abasıyanık"]],
+    ["Bilim", "Güneş sistemindeki en büyük gezegen hangisidir?", ["Jüpiter", "Satürn", "Neptün", "Dünya"]],
+    ["Spor", "Olimpiyat bayrağında kaç halka vardır?", ["5", "4", "6", "7"]],
+    ["Coğrafya", "Dünyanın en yüksek dağı hangisidir?", ["Everest", "K2", "Kilimanjaro", "Mont Blanc"]],
+    ["Tarih", "\"Nutuk\" adlı eser kime aittir?", ["Mustafa Kemal Atatürk", "Kazım Karabekir", "Ziya Gökalp", "Mehmet Akif Ersoy"]],
+    ["Genel", "Japonya'nın para birimi nedir?", ["Yen", "Yuan", "Won", "Rupi"]],
+    ["Bilim", "Genel verici olarak bilinen kan grubu hangisidir?", ["0 Rh(-)", "AB Rh(+)", "A Rh(+)", "B Rh(-)"]],
+    ["Sanat", "Ressam Vincent van Gogh hangi ülkede doğmuştur?", ["Hollanda", "Fransa", "Belçika", "Almanya"]],
+    ["Tarih", "TBMM hangi tarihte açılmıştır?", ["23 Nisan 1920", "29 Ekim 1923", "19 Mayıs 1919", "1 Kasım 1922"]],
+    ["Coğrafya", "Türkiye'nin yüzölçümü en büyük gölü hangisidir?", ["Van Gölü", "Tuz Gölü", "Beyşehir Gölü", "Eğirdir Gölü"]],
+    ["Bilim", "Ses aşağıdaki ortamlardan hangisinde yayılamaz?", ["Boşluk", "Su", "Hava", "Demir"]],
+    ["Spor", "Satrançta oyun başında her oyuncunun kaç piyonu vardır?", ["8", "6", "10", "16"]],
+    ["Bilim", "Telefonun mucidi olarak bilinen kişi kimdir?", ["Alexander Graham Bell", "Thomas Edison", "Nikola Tesla", "Guglielmo Marconi"]],
+    ["Coğrafya", "Kuzey Kıbrıs Türk Cumhuriyeti'nin başkenti neresidir?", ["Lefkoşa", "Girne", "Gazimağusa", "Güzelyurt"]],
+    ["Spor", "\"Tour de France\" hangi spor dalında yapılan bir yarıştır?", ["Bisiklet", "Atletizm", "Yelken", "Otomobil"]],
+    ["Tarih", "Osmanlı Devleti'nin kurucusu kimdir?", ["Osman Bey", "Orhan Bey", "Ertuğrul Gazi", "I. Murat"]],
+    ["Matematik", "Bir dik açı kaç derecedir?", ["90", "45", "180", "60"]]
+  ],
+  zor: [
+    ["Tarih", "Sakarya Meydan Muharebesi'nden sonra Mustafa Kemal'e hangi rütbe verilmiştir?", ["Mareşal", "Orgeneral", "Korgeneral", "Tümgeneral"]],
+    ["Bilim", "Periyodik tabloda \"Au\" simgesi hangi elementi gösterir?", ["Altın", "Gümüş", "Alüminyum", "Argon"]],
+    ["Matematik", "Pi sayısının ilk beş basamağı hangisidir?", ["3,1415", "3,1451", "3,1514", "3,1145"]],
+    ["Tarih", "Lale Devri hangi padişah döneminde yaşanmıştır?", ["III. Ahmet", "IV. Murat", "II. Mahmut", "III. Selim"]],
+    ["Tarih", "Tanzimat Fermanı hangi yılda ilan edilmiştir?", ["1839", "1856", "1876", "1808"]],
+    ["Tarih", "Dünyanın ilk kadın savaş pilotu olarak kabul edilen Türk kimdir?", ["Sabiha Gökçen", "Halide Edib Adıvar", "Afet İnan", "Nene Hatun"]],
+    ["Edebiyat", "\"Sefiller\" romanının yazarı kimdir?", ["Victor Hugo", "Honoré de Balzac", "Émile Zola", "Alexandre Dumas"]],
+    ["Bilim", "Yetişkin bir insanın iskeletinde kaç kemik bulunur?", ["206", "186", "216", "256"]],
+    ["Bilim", "Mutlak sıfır kaç santigrat derecedir?", ["-273,15 °C", "-100 °C", "-459,67 °C", "-373,15 °C"]],
+    ["Coğrafya", "Moğolistan'ın başkenti neresidir?", ["Ulan Batur", "Astana", "Bişkek", "Taşkent"]],
+    ["Coğrafya", "Kazakistan'ın başkenti neresidir?", ["Astana", "Almatı", "Bişkek", "Duşanbe"]],
+    ["Tarih", "Göktürk (Orhun) Kitabeleri bugün hangi ülkenin sınırları içindedir?", ["Moğolistan", "Kazakistan", "Türkiye", "Özbekistan"]],
+    ["Bilim", "Erime noktası en yüksek olan metal hangisidir?", ["Tungsten", "Demir", "Titanyum", "Platin"]],
+    ["Bilim", "Penisilini keşfeden bilim insanı kimdir?", ["Alexander Fleming", "Louis Pasteur", "Robert Koch", "Edward Jenner"]],
+    ["Edebiyat", "Kaşgarlı Mahmud'un ünlü eseri hangisidir?", ["Divanü Lügati't-Türk", "Kutadgu Bilig", "Atabetü'l-Hakayık", "Dede Korkut Hikâyeleri"]],
+    ["Edebiyat", "\"Kutadgu Bilig\" adlı eserin yazarı kimdir?", ["Yusuf Has Hacib", "Kaşgarlı Mahmud", "Ahmet Yesevi", "Edip Ahmet Yükneki"]],
+    ["Coğrafya", "Amazon Nehri hangi okyanusa dökülür?", ["Atlas Okyanusu", "Pasifik Okyanusu", "Hint Okyanusu", "Arktik Okyanusu"]],
+    ["Coğrafya", "Okyanusların bilinen en derin noktası hangisidir?", ["Mariana Çukuru", "Porto Riko Çukuru", "Java Çukuru", "Tonga Çukuru"]],
+    ["Tarih", "Rönesans hareketi ilk olarak hangi ülkede başlamıştır?", ["İtalya", "Fransa", "İngiltere", "Almanya"]],
+    ["Tarih", "Fransız İhtilali hangi yılda başlamıştır?", ["1789", "1776", "1815", "1848"]],
+    ["Edebiyat", "\"Kuyucaklı Yusuf\" romanının yazarı kimdir?", ["Sabahattin Ali", "Orhan Kemal", "Yaşar Kemal", "Kemal Tahir"]],
+    ["Edebiyat", "Nobel Edebiyat Ödülü'nü kazanan ilk Türk yazar kimdir?", ["Orhan Pamuk", "Yaşar Kemal", "Nazım Hikmet", "Elif Şafak"]],
+    ["Bilim", "2015 Nobel Kimya Ödülü'nü kazanan Türk bilim insanı kimdir?", ["Aziz Sancar", "Cahit Arf", "Gazi Yaşargil", "Oktay Sinanoğlu"]],
+    ["Bilim", "Güneş'ten çıkan ışık Dünya'ya yaklaşık ne kadar sürede ulaşır?", ["8 dakika", "8 saniye", "1 saat", "8 saat"]],
+    ["Tarih", "\"Veni, vidi, vici\" sözü hangi dilde söylenmiştir?", ["Latince", "Yunanca", "İtalyanca", "İbranice"]],
+    ["Bilim", "DNA'nın çift sarmal yapısını 1953'te açıklayan bilim insanları kimlerdir?", ["Watson ve Crick", "Marie ve Pierre Curie", "Mendel ve Darwin", "Bohr ve Rutherford"]],
+    ["Bilim", "Cahit Arf hangi alanda çalışmalarıyla tanınır?", ["Matematik", "Fizik", "Kimya", "Tıp"]],
+    ["Bilim", "1 bayt kaç bitten oluşur?", ["8", "4", "16", "10"]],
+    ["Bilim", "Oda sıcaklığında sıvı halde bulunan metal hangisidir?", ["Cıva", "Sodyum", "Kurşun", "Kalay"]],
+    ["Tarih", "İlk Türk-İslam devletlerinden Karahanlıların başkentlerinden biri hangisidir?", ["Kaşgar", "Konya", "Bursa", "Edirne"]]
+  ]
+};
+
+const LEVEL_TIME = { kolay: 20, orta: 15, zor: 10 };
+const START_LIVES = 3;
+const RECORD_KEY = "bilgiYarismasi.rekorlar";
+
+// ---------- Yardımcılar ----------
+const $ = (id) => document.getElementById(id);
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// "fikret" kontrolü: büyük/küçük harf ve Türkçe I/İ farkı önemsiz.
+function isFikret(name) {
+  return name.trim().toLocaleLowerCase("tr-TR").replace(/ı/g, "i") === "fikret";
+}
+
+function loadRecords() {
+  try {
+    const r = JSON.parse(localStorage.getItem(RECORD_KEY));
+    if (r && typeof r === "object") return Object.assign({ kolay: 0, orta: 0, zor: 0 }, r);
+  } catch (e) {}
+  return { kolay: 0, orta: 0, zor: 0 };
+}
+
+function saveRecords(r) {
+  try { localStorage.setItem(RECORD_KEY, JSON.stringify(r)); } catch (e) {}
+}
+
+function showScreen(id) {
+  ["startScreen", "gameScreen", "endScreen"].forEach((s) => $(s).classList.toggle("hidden", s !== id));
+}
+
+// ---------- Oyun durumu ----------
+let state = null;
+let level = "kolay";
+let timerId = null;
+
+function renderRecords() {
+  const r = loadRecords();
+  $("recKolay").textContent = r.kolay;
+  $("recOrta").textContent = r.orta;
+  $("recZor").textContent = r.zor;
+}
+
+function scoreText() {
+  return state.champion ? "MAX" : String(state.score);
+}
+
+function startGame() {
+  const name = $("nameInput").value.trim();
+  if (!name) return;
+  state = {
+    name,
+    champion: isFikret(name),
+    level,
+    score: 0,
+    lives: START_LIVES,
+    correct: 0,
+    asked: 0,
+    deck: [],
+    current: null,
+    locked: false
+  };
+  $("greetName").textContent = name;
+  showScreen("gameScreen");
+  if (state.champion) {
+    showChampion(nextQuestion);
+  } else {
+    nextQuestion();
+  }
+}
+
+function drawQuestion() {
+  // Sorular bitince deste karıştırılıp baştan başlar (sınırsız soru).
+  if (state.deck.length === 0) {
+    let deck = shuffle(QUESTIONS[state.level]);
+    if (state.current && deck[0] === state.current && deck.length > 1) deck.push(deck.shift());
+    state.deck = deck;
+  }
+  return state.deck.shift();
+}
+
+function nextQuestion() {
+  state.current = drawQuestion();
+  state.asked++;
+  state.locked = false;
+  const [category, text, options] = state.current;
+  const correctText = options[0];
+
+  $("qNum").textContent = state.asked;
+  $("score").textContent = scoreText();
+  $("lives").textContent = "❤️".repeat(state.lives) + "🤍".repeat(START_LIVES - state.lives);
+  $("category").textContent = category;
+  $("question").textContent = text;
+  $("feedback").textContent = "";
+  $("feedback").className = "feedback";
+
+  const box = $("answers");
+  box.innerHTML = "";
+  shuffle(options).forEach((opt, i) => {
+    const b = document.createElement("button");
+    b.className = "answer";
+    b.innerHTML = '<span class="letter">' + "ABCD"[i] + "</span><span></span>";
+    b.lastChild.textContent = opt;
+    b.dataset.correct = opt === correctText ? "1" : "0";
+    b.addEventListener("click", () => answer(b));
+    box.appendChild(b);
+  });
+
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerId);
+  const total = LEVEL_TIME[state.level] * 1000;
+  const startedAt = performance.now();
+  state.timeLeft = total;
+  const fill = $("timerFill");
+  const tick = () => {
+    state.timeLeft = Math.max(0, total - (performance.now() - startedAt));
+    const ratio = state.timeLeft / total;
+    fill.style.width = (ratio * 100) + "%";
+    fill.className = "timer-fill" + (ratio < 0.25 ? " danger" : ratio < 0.5 ? " warn" : "");
+    $("timeLeft").textContent = Math.ceil(state.timeLeft / 1000);
+    if (state.timeLeft <= 0) {
+      clearInterval(timerId);
+      answer(null);
+    }
+  };
+  tick();
+  timerId = setInterval(tick, 50);
+}
+
+function answer(button) {
+  if (state.locked) return;
+  state.locked = true;
+  clearInterval(timerId);
+
+  const buttons = [...document.querySelectorAll(".answer")];
+  buttons.forEach((b) => {
+    b.disabled = true;
+    if (b.dataset.correct === "1") b.classList.add("correct");
+  });
+
+  const fb = $("feedback");
+  if (button && button.dataset.correct === "1") {
+    const secondsLeft = Math.ceil(state.timeLeft / 1000);
+    const gained = 100 + secondsLeft * 10;
+    state.score += gained;
+    state.correct++;
+    fb.textContent = state.champion ? "Doğru! Şampiyonsun!" : "Doğru! +" + gained + " puan";
+    fb.className = "feedback good";
+  } else {
+    if (button) button.classList.add("wrong");
+    state.lives--;
+    fb.textContent = button ? "Yanlış cevap!" : "Süre doldu!";
+    fb.className = "feedback bad";
+  }
+  $("score").textContent = scoreText();
+  $("lives").textContent = "❤️".repeat(state.lives) + "🤍".repeat(START_LIVES - state.lives);
+
+  setTimeout(() => {
+    if (state.lives <= 0) endGame();
+    else nextQuestion();
+  }, 1400);
+}
+
+function endGame() {
+  const records = loadRecords();
+  let isNew = false;
+  // Fikret'in oyunları rekor kaydını değiştirmez.
+  if (!state.champion && state.score > records[state.level]) {
+    records[state.level] = state.score;
+    saveRecords(records);
+    isNew = true;
+  }
+  $("endName").textContent = state.name;
+  $("finalScore").textContent = scoreText();
+  $("statCorrect").textContent = state.correct;
+  $("statTotal").textContent = state.asked;
+  $("statBest").textContent = state.champion ? "MAX" : records[state.level];
+  $("newRecord").classList.toggle("hidden", !isNew);
+  showScreen("endScreen");
+  if (state.champion) showChampion();
+}
+
+// ---------- Şampiyon popup ----------
+let championDone = null;
+function showChampion(onClose) {
+  championDone = onClose || null;
+  $("championPopup").classList.remove("hidden");
+  const colors = ["#f8b400", "#6a5af9", "#d66efd", "#3fc4ff", "#22c55e", "#ef4444"];
+  for (let i = 0; i < 60; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = 2 + Math.random() * 2 + "s";
+    c.style.animationDelay = Math.random() * 0.6 + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 5000);
+  }
+}
+$("championBtn").addEventListener("click", () => {
+  $("championPopup").classList.add("hidden");
+  const fn = championDone;
+  championDone = null;
+  if (fn) fn();
+});
+
+// ---------- Giriş ekranı olayları ----------
+$("nameInput").addEventListener("input", (e) => {
+  $("startBtn").disabled = e.target.value.trim() === "";
+});
+$("nameInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !$("startBtn").disabled) startGame();
+});
+document.querySelectorAll(".level").forEach((b) => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".level").forEach((x) => x.classList.remove("selected"));
+    b.classList.add("selected");
+    level = b.dataset.level;
+  });
+});
+$("startBtn").addEventListener("click", startGame);
+$("againBtn").addEventListener("click", startGame);
+$("menuBtn").addEventListener("click", () => {
+  renderRecords();
+  showScreen("startScreen");
+});
+
+renderRecords();
+</script>
+</body>
+</html>
